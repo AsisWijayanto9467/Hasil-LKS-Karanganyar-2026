@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part B - CSS Grid Layout</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f2f2f2;
+            padding: 20px;
+        }
+
+        .container {
+            display: grid;
+            gap: 5px;
+        }
+
+        /* ============================= */
+        /* DESKTOP > 720px */
+        /* ============================= */
+
+        @media (min-width: 721px) {
+
+            .container {
+                grid-template-columns: 1fr 1fr 1fr 300px;
+                grid-template-rows: auto auto 200px 200px auto;
+                grid-template-areas:
+                    "site nav1 nav2 nav3"
+                    "posttitle posttitle posttitle sidebar"
+                    "postmeta main main sidebar"
+                    "postmeta image image ads"
+                    "footer footer footer other";
+            }
+
+        }
+
+        /* ============================= */
+        /* MOBILE < 720px */
+        /* ============================= */
+
+        @media (max-width: 720px) {
+
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "site"
+                    "nav1"
+                    "nav2"
+                    "nav3"
+                    "posttitle"
+                    "postmeta"
+                    "main"
+                    "image"
+                    "sidebar"
+                    "ads"
+                    "other"
+                    "footer";
+            }
+
+        }
+
+        /* ============================= */
+        /* GRID AREA STYLING */
+        /* ============================= */
+
+        .site {
+            grid-area: site;
+            background: gold;
+            padding: 15px;
+        }
+
+        .nav1 {
+            grid-area: nav1;
+            background: #e6a8b3;
+            padding: 15px;
+        }
+
+        .nav2 {
+            grid-area: nav2;
+            background: #e6a8b3;
+            padding: 15px;
+        }
+
+        .nav3 {
+            grid-area: nav3;
+            background: #e6a8b3;
+            padding: 15px;
+        }
+
+        .posttitle {
+            grid-area: posttitle;
+            background: #9cc3d5;
+            padding: 15px;
+        }
+
+        .postmeta {
+            grid-area: postmeta;
+            background: #8dd48b;
+            padding: 15px;
+        }
+
+        .main {
+            grid-area: main;
+            background: #cfcfcf;
+            padding: 15px;
+        }
+
+        .image {
+            grid-area: image;
+            background: yellow;
+            padding: 15px;
+        }
+
+        .sidebar {
+            grid-area: sidebar;
+            background: #f4a742;
+            padding: 15px;
+        }
+
+        .ads {
+            grid-area: ads;
+            background: green;
+            padding: 15px;
+            color: white;
+        }
+
+        .other {
+            grid-area: other;
+            background: purple;
+            padding: 15px;
+            color: white;
+        }
+
+        .footer {
+            grid-area: footer;
+            background: #a58c80;
+            padding: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="site">Site Title</div>
+        <div class="nav1">Nav 1</div>
+        <div class="nav2">Nav 2</div>
+        <div class="nav3">Nav 3</div>
+
+        <div class="posttitle">Post Title</div>
+        <div class="postmeta">Post Meta</div>
+        <div class="main">Main Content</div>
+        <div class="image">Main Content Image</div>
+
+        <div class="sidebar">Side Bar</div>
+        <div class="ads">Ads</div>
+        <div class="other">Other Stuffs</div>
+
+        <div class="footer">© 2021 footer</div>
+
+    </div>
+
+</body>
+
+</html>

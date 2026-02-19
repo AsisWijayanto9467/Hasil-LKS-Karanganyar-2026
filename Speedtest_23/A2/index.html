@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Landing Page</title>
+<style>
+body {
+    margin:0;
+    font-family:Arial, sans-serif;
+}
+
+nav {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px 40px;
+    background:#111;
+    color:white;
+}
+
+.logo {
+    font-size:20px;
+    font-weight:bold;
+}
+
+.menu {
+    list-style:none;
+    display:flex;
+    gap:20px;
+}
+
+.menu li {
+    position:relative;
+    cursor:pointer;
+}
+
+.dropdown {
+    display:none;
+    position:absolute;
+    top:30px;
+    left:0;
+    background:white;
+    color:black;
+    padding:10px;
+    list-style:none;
+    box-shadow:0 5px 15px rgba(0,0,0,0.2);
+}
+
+.menu li:hover .dropdown {
+    display:block;
+}
+
+.hero {
+    height:90vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(to right, #4e73df, #1cc88a);
+    color:white;
+    text-align:center;
+}
+
+.hero h1 {
+    font-size:40px;
+    margin-bottom:20px;
+}
+
+.cta {
+    padding:12px 25px;
+    font-size:18px;
+    background:white;
+    color:#333;
+    border:none;
+    border-radius:25px;
+    cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<nav>
+    <div class="logo">MyBrand</div>
+    <ul class="menu">
+        <li>Home</li>
+        <li>Services
+            <ul class="dropdown">
+                <li>Web Design</li>
+                <li>App Development</li>
+                <li>SEO</li>
+            </ul>
+        </li>
+        <li>About</li>
+        <li>Contact</li>
+    </ul>
+</nav>
+
+<section class="hero">
+    <h1>Build Your Dream Website Today</h1>
+    <button class="cta">Get Started</button>
+</section>
+
+</body>
+</html>

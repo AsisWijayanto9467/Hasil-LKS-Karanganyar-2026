@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Messenger - Dialog List</title>
+<style>
+body {
+    background:#e5e5e5;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    font-family:Arial, sans-serif;
+}
+
+.phone {
+    width:360px;
+    height:640px;
+    background:white;
+    border-radius:20px;
+    overflow:hidden;
+    box-shadow:0 10px 30px rgba(0,0,0,0.2);
+    display:flex;
+    flex-direction:column;
+}
+
+.header {
+    padding:15px;
+    font-size:20px;
+    font-weight:bold;
+    border-bottom:1px solid #ddd;
+}
+
+.dialog {
+    display:flex;
+    align-items:center;
+    padding:12px;
+    border-bottom:1px solid #f0f0f0;
+    cursor:pointer;
+}
+
+.dialog:hover {
+    background:#f9f9f9;
+}
+
+.avatar {
+    width:50px;
+    height:50px;
+    border-radius:50%;
+    margin-right:10px;
+}
+
+.text {
+    flex:1;
+}
+
+.name {
+    font-weight:bold;
+}
+
+.preview {
+    font-size:13px;
+    color:gray;
+}
+
+.new-message {
+    position:absolute;
+    bottom:20px;
+    right:20px;
+    width:55px;
+    height:55px;
+    border-radius:50%;
+    background:#0084ff;
+    color:white;
+    font-size:28px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    box-shadow:0 5px 15px rgba(0,0,0,0.3);
+}
+</style>
+</head>
+<body>
+
+<div class="phone">
+    <div class="header">Messenger</div>
+
+    <div class="dialog">
+        <img src="https://i.pravatar.cc/100?img=1" class="avatar">
+        <div class="text">
+            <div class="name">John Doe</div>
+            <div class="preview">Hey, how are you?</div>
+        </div>
+    </div>
+
+    <div class="dialog">
+        <img src="https://i.pravatar.cc/100?img=2" class="avatar">
+        <div class="text">
+            <div class="name">Sarah Smith</div>
+            <div class="preview">Let's meet tomorrow.</div>
+        </div>
+    </div>
+
+    <div class="dialog">
+        <img src="https://i.pravatar.cc/100?img=3" class="avatar">
+        <div class="text">
+            <div class="name">Michael Lee</div>
+            <div class="preview">Thanks for the info!</div>
+        </div>
+    </div>
+
+    <div class="new-message">+</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speedtest UI Kit</title>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1e40af;
+            --gray: #e5e7eb;
+            --text: #1f2937;
+            --radius: 8px;
+            --transition: 0.2s ease-in-out;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #f9fafb;
+            padding: 40px;
+            color: var(--text);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        /* Text Box */
+        .input-text {
+            padding: 10px 14px;
+            border: 1px solid var(--gray);
+            border-radius: var(--radius);
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .input-text:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+
+        /* Button */
+        .btn {
+            padding: 10px 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Dropdown */
+        .select {
+            padding: 10px 14px;
+            border: 1px solid var(--gray);
+            border-radius: var(--radius);
+        }
+
+        /* Checkbox & Radio */
+        .input-check,
+        .input-radio {
+            accent-color: var(--primary);
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+
+        /* Label Group */
+        .label-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        /* Date Input */
+        .input-date {
+            padding: 10px 14px;
+            border: 1px solid var(--gray);
+            border-radius: var(--radius);
+        }
+
+        /* Range */
+        .input-range {
+            width: 100%;
+        }
+
+        /* Progress */
+        .progress-container {
+            background: var(--gray);
+            border-radius: var(--radius);
+            overflow: hidden;
+            height: 20px;
+        }
+
+        .progress-bar {
+            background: var(--primary);
+            height: 100%;
+            width: 60%;
+            transition: width 0.4s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <h2>Text Box</h2>
+        <input type="text" class="input-text" placeholder="Enter text here">
+
+        <h2>Button</h2>
+        <button class="btn">Submit</button>
+
+        <h2>Drop-down List</h2>
+        <select class="select">
+            <option>Select option</option>
+            <option>Option 1</option>
+            <option>Option 2</option>
+        </select>
+
+        <h2>Checkbox</h2>
+        <input type="checkbox" class="input-check">
+
+        <h2>Radio Button</h2>
+        <input type="radio" name="gender" class="input-radio">
+
+        <h2>Label with Checkbox</h2>
+        <label class="label-group">
+            <input type="checkbox" class="input-check">
+            Accept Terms
+        </label>
+
+        <h2>Label with Radio Button</h2>
+        <label class="label-group">
+            <input type="radio" name="choice" class="input-radio">
+            Option A
+        </label>
+
+        <h2>Drop-down Calendar Input</h2>
+        <input type="date" class="input-date">
+
+        <h2>Range</h2>
+        <input type="range" class="input-range" min="0" max="100">
+
+        <h2>Progress Bar</h2>
+        <div class="progress-container">
+            <div class="progress-bar"></div>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

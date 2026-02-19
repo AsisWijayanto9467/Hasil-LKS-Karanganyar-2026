@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Shooter Game</title>
+
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        /* ===== GAME AREA ===== */
+        .game-area {
+            position: relative;
+            width: calc(100vw - 280px);
+            height: 100vh;
+            background: url("../Sprites/background.jpg") center/cover no-repeat;
+            cursor: none;
+        }
+
+        /* ===== NAVBAR ===== */
+        .top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            z-index: 10;
+        }
+
+        /* ===== TARGET ===== */
+        .target {
+            position: absolute;
+            width: 120px;
+            cursor: pointer;
+            z-index: 5;
+        }
+
+        /* ===== GUN ===== */
+        .gun {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        /* ===== POINTER ===== */
+        .pointer {
+            position: absolute;
+            width: 60px;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+        }
+
+        /* ===== BOOM EFFECT ===== */
+        .boom {
+            position: absolute;
+            width: 80px;
+            pointer-events: none;
+            animation: explode 0.4s ease-out;
+            z-index: 8;
+        }
+
+        @keyframes explode {
+            from { transform: scale(0.5); opacity: 1; }
+            to { transform: scale(1.2); opacity: 0; }
+        }
+
+        /* ===== LEADERBOARD ===== */
+        .leaderboard {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 280px;
+            height: 100%;
+            background: #111;
+            color: white;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .leaderboard select {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+
+        .score-item {
+            margin: 15px 0;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+        }
+
+        /* ===== EXIT BUTTON ===== */
+        .exit-btn {
+            background: red;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        /* ===== SORT SELECT STYLE ===== */
+        .leaderboard select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: none;
+            background: #222;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        /* ===== DETAIL BUTTON ===== */
+        .detail-btn {
+            background: gold;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        /* ===== DETAIL MODAL ===== */
+        .detail-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+        }
+
+        .detail-content {
+            background: white;
+            width: 400px;
+            margin: 100px auto;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="game-area" id="gameArea">
+
+        <!-- NAVBAR -->
+        <div class="top-bar">
+            <div id="playerName">Player</div>
+            <div>Score : <span id="score">0</span></div>
+            <div>Time : <span id="time">00:00</span></div>
+            <button class="exit-btn" onclick="exitGame()">Exit</button>
+        </div>
+
+
+        <!-- POINTER -->
+        <img src="../Sprites/pointer.png" class="pointer" id="pointer">
+
+        <!-- GUN -->
+        <img class="gun" id="gun">
+
+        <div class="detail-modal" id="detailModal">
+            <div class="detail-content">
+                <h3>Game Detail</h3>
+                <div id="detailInfo"></div>
+                <button onclick="closeDetail()">Close</button>
+            </div>
+        </div>
+
+
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div class="leaderboard">
+        <h2>LEADERBOARD</h2>
+
+        <select id="sortOption" onchange="showLeaderboard()">
+            <option value="desc">Highest Score</option>
+            <option value="asc">Lowest Score</option>
+        </select>
+
+        <div id="leaderList"></div>
+    </div>
+
+    <script>
+
+        let username = localStorage.getItem("username") || "Player";
+        let gunImg = localStorage.getItem("gun") || "gun1.png";
+        let targetImg = localStorage.getItem("target") || "target1.png";
+
+        document.getElementById("playerName").textContent = username;
+        document.getElementById("gun").src = "../Sprites/" + gunImg;
+
+        let score = 0;
+        let timeLeft = 30;
+
+        const gameArea = document.getElementById("gameArea");
+        const pointer = document.getElementById("pointer");
+        const scoreEl = document.getElementById("score");
+        const timeEl = document.getElementById("time");
+
+        /* ===== POINTER FOLLOW MOUSE ===== */
+        document.addEventListener("mousemove", e => {
+            pointer.style.left = e.pageX + "px";
+            pointer.style.top = e.pageY + "px";
+        });
+
+        function formatTime(seconds) {
+            let minutes = Math.floor(seconds / 60);
+            let remainingSeconds = seconds % 60;
+
+            let formattedMinutes = minutes < 10 ? "0" + minutes : minutes;
+            let formattedSeconds = remainingSeconds < 10 ? "0" + remainingSeconds : remainingSeconds;
+
+            return formattedMinutes + ":" + formattedSeconds;
+        }
+
+
+        /* ===== CREATE TARGET ===== */
+        function spawnTarget() {
+            const target = document.createElement("img");
+            target.src = "../Sprites/" + targetImg;
+            target.classList.add("target");
+
+            target.style.left = Math.random() * (window.innerWidth - 400) + "px";
+            target.style.top = Math.random() * (window.innerHeight - 200) + "px";
+
+            target.onclick = function (e) {
+                score += 10;
+                scoreEl.textContent = score;
+
+                createBoom(e.pageX, e.pageY);
+                target.remove();
+            };
+
+            gameArea.appendChild(target);
+
+            setTimeout(() => {
+                if (target.parentNode) target.remove();
+            }, 2000);
+        }
+
+        /* ===== BOOM EFFECT ===== */
+        function createBoom(x, y) {
+            const boom = document.createElement("img");
+            boom.src = "../Sprites/boom.png";
+            boom.classList.add("boom");
+            boom.style.left = x - 40 + "px";
+            boom.style.top = y - 40 + "px";
+
+            gameArea.appendChild(boom);
+            setTimeout(() => boom.remove(), 400);
+        }
+
+        /* ===== TIMER ===== */
+        timeEl.textContent = formatTime(timeLeft);
+
+        const timer = setInterval(() => {
+            timeLeft--;
+
+            timeEl.textContent = formatTime(timeLeft);
+
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }, 1000);
+
+
+        /* ===== SPAWN LOOP ===== */
+        let spawnInterval = setInterval(spawnTarget, 1000);
+
+        /* ===== END GAME ===== */
+        function endGame() {
+            clearInterval(timer);
+            clearInterval(spawnInterval);
+
+            let level = localStorage.getItem("level");
+            let gun = localStorage.getItem("gun");
+            let target = localStorage.getItem("target");
+
+            let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+
+            leaderboard.push({
+                name: username,
+                score: score,
+                level: level,
+                gun: gun,
+                target: target,
+                duration: 30,
+                date: new Date().toLocaleString()
+            });
+
+            localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
+
+            alert("Game Over! Score: " + score);
+            showLeaderboard();
+        }
+
+
+        function showLeaderboard() {
+            let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+            const leaderList = document.getElementById("leaderList");
+            const sortOption = document.getElementById("sortOption").value;
+
+            if (sortOption === "desc") {
+                leaderboard.sort((a, b) => b.score - a.score);
+            } else {
+                leaderboard.sort((a, b) => a.score - b.score);
+            }
+
+            leaderList.innerHTML = "";
+
+            leaderboard.slice(0, 5).forEach((player, index) => {
+                leaderList.innerHTML += `
+                    <div class="score-item">
+                        <strong>${player.name}</strong><br>
+                        Score : ${player.score}<br>
+                        <button class="detail-btn" onclick="showDetail(${index})">
+                            Detail
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+
+        showLeaderboard();
+
+        function showDetail(index) {
+            let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+            let player = leaderboard[index];
+
+            document.getElementById("detailInfo").innerHTML = `
+                <p><strong>Name:</strong> ${player.name}</p>
+                <p><strong>Score:</strong> ${player.score}</p>
+                <p><strong>Level:</strong> ${player.level}</p>
+                <p><strong>Gun:</strong> ${player.gun}</p>
+                <p><strong>Target:</strong> ${player.target}</p>
+                <p><strong>Duration:</strong> ${player.duration} sec</p>
+                <p><strong>Date:</strong> ${player.date}</p>
+            `;
+
+            document.getElementById("detailModal").style.display = "block";
+        }
+
+        function closeDetail() {
+            document.getElementById("detailModal").style.display = "none";
+        }
+
+        function exitGame() {
+            window.location.href = "index.html";
+        }
+
+
+    </script>
+
+</body>
+
+</html>

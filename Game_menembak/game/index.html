@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Shooter Game</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            text-align: center;
+        }
+
+        .container {
+            width: 400px;
+            margin: 30px auto;
+        }
+
+        .logo {
+            width: 200px;
+        }
+
+        /* ===== INPUT & SELECT SAMA ===== */
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #999;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        /* ===== TITLE ===== */
+        .section-title {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        /* ===== OPTIONS ===== */
+        .options {
+            display: flex;
+            justify-content: space-around;
+            margin: 10px 0;
+        }
+
+        .option-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .option-box img {
+            width: 80px;
+            margin-bottom: 8px;
+        }
+
+        /* ===== CHECKBOX BULAT ===== */
+        .option-box input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #555;
+            border-radius: 50%;   /* ini bikin bulat */
+            cursor: pointer;
+            position: relative;
+        }
+
+        /* Saat dicentang */
+        .option-box input[type="checkbox"]:checked {
+            background-color: green;
+            border-color: green;
+        }
+
+        /* ===== BUTTON ===== */
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        .play-btn {
+            background: green;
+            color: white;
+        }
+
+        .instruction-btn {
+            background: brown;
+            color: white;
+        }
+
+        /* ===== MODAL ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .modal-content {
+            background: #333;
+            color: white;
+            width: 500px;
+            margin: 100px auto;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+        }
+
+        .close {
+            float: right;
+            cursor: pointer;
+            font-size: 20px;
+            color: red;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- Logo -->
+        <img src="../Sprites/shooter.png" class="logo">
+
+        <input type="text" id="username" placeholder="Input Username">
+
+        <select id="level">
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+        </select>
+
+        <div class="section-title">Select Gun</div>
+        <div class="options">
+
+            <label class="option-box">
+                <img src="../Sprites/gun1.png">
+                <input type="checkbox" name="gun" value="gun1.png">
+            </label>
+
+            <label class="option-box">
+                <img src="../Sprites/gun2.png">
+                <input type="checkbox" name="gun" value="gun2.png">
+            </label>
+
+        </div>
+
+        <div class="section-title">Select Target</div>
+        <div class="options">
+
+            <label class="option-box">
+                <img src="../Sprites/target1.png">
+                <input type="checkbox" name="target" value="target1.png">
+            </label>
+
+            <label class="option-box">
+                <img src="../Sprites/target2.png">
+                <input type="checkbox" name="target" value="target2.png">
+            </label>
+
+            <label class="option-box">
+                <img src="../Sprites/target3.png">
+                <input type="checkbox" name="target" value="target3.png">
+            </label>
+
+        </div>
+
+        <button class="play-btn" onclick="startGame()">Play Game</button>
+        <button class="instruction-btn" onclick="openModal()">Instruction</button>
+
+    </div>
+
+    <!-- Instruction Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">X</span>
+            <h2>How to play game</h2>
+            <ol>
+                <li>Input Username</li>
+                <li>Select Gun & Target</li>
+                <li>Click Play Game</li>
+                <li>Aim & Shoot target</li>
+                <li>Get highest score!</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+
+        // Supaya hanya bisa pilih 1 checkbox per group
+        function singleCheckbox(groupName) {
+            let checkboxes = document.querySelectorAll(`input[name="${groupName}"]`);
+
+            checkboxes.forEach(box => {
+                box.addEventListener("change", function () {
+                    if (this.checked) {
+                        checkboxes.forEach(cb => {
+                            if (cb !== this) cb.checked = false;
+                        });
+                    }
+                });
+            });
+        }
+
+        singleCheckbox("gun");
+        singleCheckbox("target");
+
+        function startGame() {
+            let username = document.getElementById("username").value;
+            let level = document.getElementById("level").value;
+
+            let selectedGun = document.querySelector('input[name="gun"]:checked');
+            let selectedTarget = document.querySelector('input[name="target"]:checked');
+
+            if (!username || !selectedGun || !selectedTarget) {
+                alert("Complete all selections!");
+                return;
+            }
+
+            localStorage.setItem("username", username);
+            localStorage.setItem("level", level);
+            localStorage.setItem("gun", selectedGun.value);
+            localStorage.setItem("target", selectedTarget.value);
+
+            window.location.href = "game.html";
+        }
+
+        function openModal() {
+            document.getElementById("modal").style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById("modal").style.display = "none";
+        }
+
+    </script>
+
+
+</body>
+
+</html>

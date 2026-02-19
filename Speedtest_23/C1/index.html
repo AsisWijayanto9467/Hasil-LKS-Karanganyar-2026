@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Canvas Animation</title>
+<style>
+body {
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    background:#f2f2f2;
+}
+
+.canvas-container {
+    width:400px;
+    height:320px;
+    background:green;
+}
+</style>
+</head>
+<body>
+
+<div class="canvas-container">
+    <canvas id="myCanvas" width="400" height="320"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById("myCanvas");
+const ctx = canvas.getContext("2d");
+
+let x = 20;
+let y = canvas.height / 2;
+let radius = 15;
+let speed = 2;
+
+function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = "white";
+    ctx.fill();
+
+    x += speed;
+
+    if (x - radius > canvas.width) {
+        x = -radius;
+    }
+
+    requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Digital Timer</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background:#f2f2f2;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.timer-box {
+    background:#fff;
+    padding:30px;
+    border:2px solid #000;
+    width:400px;
+    text-align:center;
+}
+
+.buttons {
+    margin-bottom:20px;
+}
+
+button {
+    padding:10px 20px;
+    margin:5px;
+    border:none;
+    cursor:pointer;
+    color:#fff;
+    font-weight:bold;
+    border-radius:4px;
+}
+
+.start { background:#1e90ff; }
+.stop { background:#dc3545; }
+.reset { background:#ffc107; color:#000; }
+
+.display {
+    font-size:100px;
+    font-weight:bold;
+    letter-spacing:5px;
+}
+</style>
+</head>
+<body>
+
+<div class="timer-box">
+
+    <div class="buttons">
+        <button class="start" onclick="startTimer()">Start timer</button>
+        <button class="stop" onclick="stopTimer()">Stop timer</button>
+        <button class="reset" onclick="resetTimer()">Reset timer</button>
+    </div>
+
+    <div class="display" id="display">000:00</div>
+
+</div>
+
+<script>
+let seconds = 0;
+let centiseconds = 0;
+let interval = null;
+
+function updateDisplay() {
+    let sec = seconds.toString().padStart(3, '0');
+    let centi = centiseconds.toString().padStart(2, '0');
+    document.getElementById("display").innerText = sec + ":" + centi;
+}
+
+function startTimer() {
+    if (interval !== null) return;
+
+    interval = setInterval(() => {
+
+        centiseconds++;
+
+        if (centiseconds === 100) {
+            centiseconds = 0;
+            seconds++;
+        }
+
+        if (seconds === 999 && centiseconds === 59) {
+            stopTimer();
+        }
+
+        updateDisplay();
+
+    }, 10);
+}
+
+function stopTimer() {
+    clearInterval(interval);
+    interval = null;
+}
+
+function resetTimer() {
+    stopTimer();
+    seconds = 0;
+    centiseconds = 0;
+    updateDisplay();
+}
+
+updateDisplay();
+</script>
+
+</body>
+</html>
