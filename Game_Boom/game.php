@@ -1,13 +1,20 @@
 <?php
-    session_start();
+    $file = "storage/data.txt";
 
-    if(!isset($_SESSION['username']) || !isset($_SESSION['level'])){
-        header("Location: index.php");
+    if(!file_exists($file)){
+        echo "<script>alert('Data tidak ditemukan!'); window.location='index.php';</script>";
         exit();
     }
 
-    $username = $_SESSION['username'];
-    $level = $_SESSION['level'];
+    $data = file_get_contents($file);
+
+    if(empty($data)){
+        echo "<script>alert('Data kosong!'); window.location='index.php';</script>";
+        exit();
+    }
+
+    list($username, $level) = explode("|", $data);
+
 ?>
 
 <!DOCTYPE html>
@@ -17,89 +24,123 @@
 <title>BOMSKUY</title>
 
 <style>
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #ffffff;
-}
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #ffffff;
+    }
 
-/* WRAPPER */
-.wrapper {
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 15px;
-    box-sizing: border-box;
-}
+    /* WRAPPER */
+    .wrapper {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 15px;
+        box-sizing: border-box;
+    }
 
-/* CONTAINER */
-.game-container {
-    display: flex;
-}
+    /* CONTAINER */
+    .game-container {
+        display: flex;
+    }
 
-/* =========================
-   GAME BOARD
-========================= */
-.game-board {
-    position: relative;
-}
+    /* =========================
+    GAME BOARD
+    ========================= */
+    .game-board {
+        position: relative;
+    }
 
-.game-board img.bg {
-    height: 95vh;
-    display: block;
-}
+    .game-board img.bg {
+        height: 95vh;
+        display: block;
+    }
 
-/* WALL SPAWN */
-.wall {
-    position: absolute;
-    width: 75px;   /* <-- ukuran wall bisa kamu ubah disini */
-    height: 75px;
-}
+    /* WALL SPAWN */
+    .wall {
+        position: absolute;
+        width: 75px;   /* <-- ukuran wall bisa kamu ubah disini */
+        height: 75px;
+    }
 
-/* =========================
-   SIDEBAR
-========================= */
-.sidebar {
-    width: 300px;
-    background: #3a3a3a;
-    color: white;
-    padding: 40px;
-    box-sizing: border-box;
-}
+    /* =========================
+    SIDEBAR
+    ========================= */
+    .sidebar {
+        width: 300px;
+        background: #3a3a3a;
+        color: white;
+        padding: 40px;
+        box-sizing: border-box;
+    }
 
-.sidebar h1 {
-    text-align: right;
-    font-size: 45px;
-    margin-top: 0;
-    margin-bottom: 40px;
-}
+    .sidebar h1 {
+        text-align: right;
+        font-size: 45px;
+        margin-top: 0;
+        margin-bottom: 40px;
+    }
 
-.info {
-    font-size: 18px;
-    margin-bottom: 20px;
-}
+    .info {
+        font-size: 18px;
+        margin-bottom: 20px;
+    }
 
-.hearts {
-    margin: 20px 0;
-}
+    .hearts {
+        margin: 20px 0;
+    }
 
-.hearts img {
-    width: 40px;
-    margin-right: 8px;
-}
+    .hearts img {
+        width: 40px;
+        margin-right: 8px;
+    }
 
-.score-item {
-    display: flex;
-    align-items: center;
-    margin-top: 25px;
-    font-size: 20px;
-}
+    .score-item {
+        display: flex;
+        align-items: center;
+        margin-top: 25px;
+        font-size: 20px;
+    }
 
-.score-item img {
-    width: 45px;
-    margin-right: 12px;
-}
+    .score-item img {
+        width: 45px;
+        margin-right: 12px;
+    }
+
+
+    .pause-overlay{
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 999;
+    }
+
+    .pause-box{
+        background: #2e2e2e;
+        padding: 40px 60px;
+        border-radius: 10px;
+        text-align: center;
+        color: white;
+    }
+
+    .pause-box h2{
+        font-size: 40px;
+        margin-bottom: 20px;
+    }
+
+    .pause-box button{
+        padding: 12px 30px;
+        font-size: 18px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        background: #d84315;
+        color: white;
+    }
 </style>
 </head>
 
@@ -119,13 +160,13 @@ body {
 
             <div class="info">
                 <p><strong>Player</strong> : <?php echo $username; ?></p>
-                <p><strong>Time</strong> : 01:22</p>
+                <p><strong>Time</strong> : <span id="timer">00:00</span></p>
             </div>
 
             <div class="hearts">
-                <img src="images/heart.png">
-                <img src="images/heart.png">
-                <img src="images/heart.png">
+                <img src="images/heart.png" class="heart">
+                <img src="images/heart.png" class="heart">
+                <img src="images/heart.png" class="heart">
             </div>
 
             <div class="score-item">
@@ -144,6 +185,13 @@ body {
             </div>
         </div>
 
+    </div>
+</div>
+
+<div class="pause-overlay" id="pauseOverlay">
+    <div class="pause-box">
+        <h2>Game Paused</h2>
+        <button onclick="togglePause()">Continue</button>
     </div>
 </div>
 
@@ -182,6 +230,15 @@ body {
     let destroyedWalls = 0;
     let iceCollected = 0;
 
+    let playerLives = 3;
+    let gameOver = false;
+
+    let seconds = 0;
+    let timerInterval;
+
+    let isPaused = false;
+    let dogInterval;
+
     /* =========================
     HELPER
     ========================= */
@@ -205,6 +262,109 @@ body {
             dogHere ||
             key === posKey(playerRow,playerCol);
     }
+
+    function isDogAt(row, col, currentDog = null){
+        return dogs.some(d => 
+            d !== currentDog &&
+            d.row === row &&
+            d.col === col
+        );
+    }
+
+    /* =========================
+    Timer
+    ========================= */
+
+    function startTimer(){
+        timerInterval = setInterval(()=>{
+            if(gameOver) return;
+
+            seconds++;
+
+            let mins = Math.floor(seconds / 60);
+            let secs = seconds % 60;
+
+            if(mins < 10) mins = "0" + mins;
+            if(secs < 10) secs = "0" + secs;
+
+            document.getElementById("timer").innerText = mins + ":" + secs;
+
+        },1000);
+    }
+
+    function togglePause(){
+        if(gameOver) return;
+
+        isPaused = !isPaused;
+
+        const overlay = document.getElementById("pauseOverlay");
+
+        if(isPaused){
+
+            overlay.style.display = "flex";
+            clearInterval(timerInterval);
+            clearInterval(dogInterval);
+
+        }else{
+
+            overlay.style.display = "none";
+            startTimer();
+            dogInterval = setInterval(moveDogs, 600);
+        }
+    }
+
+    // Save Game gameOver
+
+    function sendToGameOver(){
+        const time = document.getElementById("timer").innerText;
+
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "gameover.php";
+
+        const data = {
+            username: "<?php echo $username; ?>",
+            time: time,
+            wall: destroyedWalls,
+            tnt: playerTNT,
+            ice: iceCollected
+        };
+
+        for (const key in data) {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = key;
+            input.value = data[key];
+            form.appendChild(input);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    /* =========================
+    Take Damage
+    ========================= */
+
+    function takeDamage(){
+        if(gameOver) return;
+
+        playerLives--;
+
+        const hearts = document.querySelectorAll(".heart");
+
+        if(hearts[playerLives]){
+            hearts[playerLives].src = "Images/heart_broke.png";
+        }
+
+        if(playerLives <= 0){
+            gameOver = true;
+            clearInterval(timerInterval);
+
+            sendToGameOver();
+        }
+    }
+
 
     /* =========================
     SPAWN WALL
@@ -271,7 +431,8 @@ body {
         while(
             isBorder(row,col) ||
             isForbidden(row,col) ||
-            isOccupied(row,col)
+            isOccupied(row,col) ||
+            isDogAt(row,col)
         );
 
         const dog = document.createElement("img");
@@ -317,7 +478,8 @@ body {
             if(
                 isBorder(newRow,newCol) ||
                 isForbidden(newRow,newCol) ||
-                wallPositions.includes(posKey(newRow,newCol))
+                wallPositions.includes(posKey(newRow,newCol)) ||
+                isDogAt(newRow,newCol,dog)
             ){
                 return;
             }
@@ -330,8 +492,7 @@ body {
 
             // CEK KENA PLAYER
             if(dog.row === playerRow && dog.col === playerCol){
-                alert("Game Over! Kamu tertangkap 🐶");
-                location.reload();
+                takeDamage();
             }
 
         });
@@ -395,6 +556,11 @@ body {
                 }
 
                 const key = posKey(newRow,newCol);
+
+                // Jika player terkena ledakan
+                if(newRow === playerRow && newCol === playerCol){
+                    takeDamage();
+                }
 
                 const explode = document.createElement("img");
                 explode.src = "images/explode.png";
@@ -488,13 +654,20 @@ body {
 
     spawnBomb();
     updateSidebar();
-    // setInterval(moveDogs, 600);
+    startTimer();
+    dogInterval = setInterval(moveDogs, 600);
 
     /* =========================
     MOVEMENT
     ========================= */
 
     document.addEventListener("keydown",function(e){
+        if(e.key === "Escape"){
+            togglePause();
+            return;
+        }
+
+        if(isPaused) return;
         
         if(isFrozen) return;
 
