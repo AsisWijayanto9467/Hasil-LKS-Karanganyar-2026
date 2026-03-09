@@ -21,16 +21,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>BOMSKUY</title>
+<title>BOMSKUY - Canvas Version</title>
 
 <style>
     body {
         margin: 0;
         font-family: Arial, sans-serif;
         background: #ffffff;
+        overflow: hidden;
     }
 
-    /* WRAPPER */
     .wrapper {
         min-height: 100vh;
         display: flex;
@@ -40,33 +40,26 @@
         box-sizing: border-box;
     }
 
-    /* CONTAINER */
     .game-container {
         display: flex;
+        box-shadow: 0 0 20px rgba(0,0,0,0.3);
     }
 
-    /* =========================
-    GAME BOARD
-    ========================= */
     .game-board {
         position: relative;
+        width: 803px;  /* 11 * 73 */
+        height: 657px;  /* 9 * 73 */
     }
 
-    .game-board img.bg {
-        height: 95vh;
+    #gameCanvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
         display: block;
     }
 
-    /* WALL SPAWN */
-    .wall {
-        position: absolute;
-        width: 75px;   /* <-- ukuran wall bisa kamu ubah disini */
-        height: 75px;
-    }
-
-    /* =========================
-    SIDEBAR
-    ========================= */
     .sidebar {
         width: 300px;
         background: #3a3a3a;
@@ -89,11 +82,13 @@
 
     .hearts {
         margin: 20px 0;
+        display: flex;
+        gap: 8px;
     }
 
     .hearts img {
         width: 40px;
-        margin-right: 8px;
+        height: 40px;
     }
 
     .score-item {
@@ -108,8 +103,7 @@
         margin-right: 12px;
     }
 
-
-    .pause-overlay{
+    .pause-overlay {
         position: fixed;
         inset: 0;
         background: rgba(0,0,0,0.7);
@@ -119,7 +113,7 @@
         z-index: 999;
     }
 
-    .pause-box{
+    .pause-box {
         background: #2e2e2e;
         padding: 40px 60px;
         border-radius: 10px;
@@ -127,12 +121,12 @@
         color: white;
     }
 
-    .pause-box h2{
+    .pause-box h2 {
         font-size: 40px;
         margin-bottom: 20px;
     }
 
-    .pause-box button{
+    .pause-box button {
         padding: 12px 30px;
         font-size: 18px;
         border: none;
@@ -148,13 +142,10 @@
 
 <div class="wrapper">
     <div class="game-container">
-
-        <!-- GAME BOARD -->
         <div class="game-board">
-            <img src="Images/background.jpg" class="bg">
+            <canvas id="gameCanvas" width="803" height="657"></canvas>
         </div>
 
-        <!-- SIDEBAR -->
         <div class="sidebar">
             <h1>BOMSKUY</h1>
 
@@ -164,9 +155,9 @@
             </div>
 
             <div class="hearts">
-                <img src="images/heart.png" class="heart">
-                <img src="images/heart.png" class="heart">
-                <img src="images/heart.png" class="heart">
+                <img src="images/heart.png" class="heart" id="heart1">
+                <img src="images/heart.png" class="heart" id="heart2">
+                <img src="images/heart.png" class="heart" id="heart3">
             </div>
 
             <div class="score-item">
@@ -184,7 +175,6 @@
                 <span id="iceCount">= 0</span>
             </div>
         </div>
-
     </div>
 </div>
 
@@ -196,7 +186,8 @@
 </div>
 
 <script>
-    const board = document.querySelector(".game-board");
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
 
     const tileSize = 73;
     const rows = 9;
@@ -210,23 +201,24 @@
         "2-8","4-8","6-8"
     ];
 
-    const wallPositions = [];
-    const dogs = [];
+    // Game objects
+    let wallPositions = [];
+    let dogs = [];
     let bombPosition = null;
+    let mapBomb = null;
+    let explosions = [];
+    let items = [];
 
     let playerBombCount = 0;
-
     let playerRow = 1;
     let playerCol = 1;
-    let player;
+    let playerDirection = 'down';
 
-    const itemPositions = {}; 
     let playerTNT = 0;
     let playerIce = 0;
 
     let isFrozen = false;
     let lastPosition = posKey(playerRow, playerCol);
-
     let destroyedWalls = 0;
     let iceCollected = 0;
 
@@ -235,93 +227,113 @@
 
     let seconds = 0;
     let timerInterval;
-
     let isPaused = false;
+    let gameLoop;
     let dogInterval;
 
-    /* =========================
-    HELPER
-    ========================= */
+    let activeBomb = null; 
 
-    function posKey(row,col){
+    // Images
+    const images = {
+        background: new Image(),
+        char_down: new Image(),
+        char_up: new Image(),
+        char_left: new Image(),
+        char_right: new Image(),
+        dog_down: new Image(),
+        dog_up: new Image(),
+        dog_left: new Image(),
+        dog_right: new Image(),
+        wall: new Image(),
+        bomb: new Image(),
+        tnt: new Image(),
+        ice: new Image(),
+        explode: new Image()
+    };
+
+    // Set image sources
+    images.background.src = 'Images/background.jpg';
+    images.char_down.src = 'images/char_down.png';
+    images.char_up.src = 'images/char_up.png';
+    images.char_left.src = 'images/char_left.png';
+    images.char_right.src = 'images/char_right.png';
+    images.dog_down.src = 'images/dog_down.png';
+    images.dog_up.src = 'images/dog_up.png';
+    images.dog_left.src = 'images/dog_left.png';
+    images.dog_right.src = 'images/dog_right.png';
+    images.wall.src = 'images/wall.png';
+    images.bomb.src = 'images/bomb.png';
+    images.tnt.src = 'images/tnt.png';
+    images.ice.src = 'images/ice.png';
+    images.explode.src = 'images/explode.png';
+
+    /* =========================
+    HELPER FUNCTIONS
+    ========================= */
+    function posKey(row, col) {
         return row + "-" + col;
     }
 
-    function isBorder(row,col){
+    function isBorder(row, col) {
         return row === 0 || col === 0 || row === rows-1 || col === cols-1;
     }
 
-    function isForbidden(row,col){
-        return forbidden.includes(posKey(row,col));
+    function isForbidden(row, col) {
+        return forbidden.includes(posKey(row, col));
     }
 
-    function isOccupied(row,col){
-        const key = posKey(row,col);
-        const dogHere = dogs.some(d => posKey(d.row,d.col) === key);
-        return wallPositions.includes(key) ||
-            dogHere ||
-            key === posKey(playerRow,playerCol);
+    function isOccupied(row, col) {
+        const key = posKey(row, col);
+        const dogHere = dogs.some(d => posKey(d.row, d.col) === key);
+        return wallPositions.includes(key) || dogHere || key === posKey(playerRow, playerCol);
     }
 
-    function isDogAt(row, col, currentDog = null){
-        return dogs.some(d => 
-            d !== currentDog &&
-            d.row === row &&
-            d.col === col
-        );
+    function isDogAt(row, col, currentDog = null) {
+        return dogs.some(d => d !== currentDog && d.row === row && d.col === col);
     }
 
     /* =========================
-    Timer
+    TIMER
     ========================= */
-
-    function startTimer(){
-        timerInterval = setInterval(()=>{
+    function startTimer() {
+        timerInterval = setInterval(() => {
             if(gameOver) return;
-
             seconds++;
-
             let mins = Math.floor(seconds / 60);
             let secs = seconds % 60;
-
-            if(mins < 10) mins = "0" + mins;
-            if(secs < 10) secs = "0" + secs;
-
-            document.getElementById("timer").innerText = mins + ":" + secs;
-
-        },1000);
+            document.getElementById("timer").innerText = 
+                (mins < 10 ? "0" + mins : mins) + ":" + 
+                (secs < 10 ? "0" + secs : secs);
+        }, 1000);
     }
 
-    function togglePause(){
+    function togglePause() {
         if(gameOver) return;
-
         isPaused = !isPaused;
-
         const overlay = document.getElementById("pauseOverlay");
-
-        if(isPaused){
-
+        
+        if(isPaused) {
             overlay.style.display = "flex";
             clearInterval(timerInterval);
             clearInterval(dogInterval);
-
-        }else{
-
+            cancelAnimationFrame(gameLoop);
+        } else {
             overlay.style.display = "none";
             startTimer();
             dogInterval = setInterval(moveDogs, 600);
+            gameLoop = requestAnimationFrame(draw);
         }
     }
 
-    // Save Game gameOver
-
-    function sendToGameOver(){
+    /* =========================
+    GAME OVER
+    ========================= */
+    function sendToGameOver() {
         const time = document.getElementById("timer").innerText;
-
         const form = document.createElement("form");
         form.method = "POST";
         form.action = "gameover.php";
-
+        
         const data = {
             username: "<?php echo $username; ?>",
             time: time,
@@ -342,470 +354,407 @@
         form.submit();
     }
 
-    /* =========================
-    Take Damage
-    ========================= */
-
-    function takeDamage(){
+    function takeDamage() {
         if(gameOver) return;
-
         playerLives--;
-
+        
         const hearts = document.querySelectorAll(".heart");
-
-        if(hearts[playerLives]){
+        if(hearts[playerLives]) {
             hearts[playerLives].src = "Images/heart_broke.png";
         }
 
-        if(playerLives <= 0){
+        if(playerLives <= 0) {
             gameOver = true;
             clearInterval(timerInterval);
-
+            clearInterval(dogInterval);
+            cancelAnimationFrame(gameLoop);
             sendToGameOver();
         }
     }
 
-
     /* =========================
-    SPAWN WALL
+    SPAWN FUNCTIONS
     ========================= */
+    function spawnWall() {
+        let row, col;
+        do {
+            row = Math.floor(Math.random() * rows);
+            col = Math.floor(Math.random() * cols);
+        } while(isBorder(row, col) || isForbidden(row, col) || isOccupied(row, col));
+        
+        wallPositions.push(posKey(row, col));
+    }
 
-    function spawnWall(){
-        let row,col;
-
-        do{
-            row = Math.floor(Math.random()*rows);
-            col = Math.floor(Math.random()*cols);
+    function spawnDog() {
+        const level = "<?php echo $level; ?>";
+        let totalDog = level === "Medium" ? 2 : level === "Hard" ? 3 : 1;
+        
+        for(let i = 0; i < totalDog; i++) {
+            let row, col;
+            do {
+                row = Math.floor(Math.random() * rows);
+                col = Math.floor(Math.random() * cols);
+            } while(isBorder(row, col) || isForbidden(row, col) || isOccupied(row, col) || isDogAt(row, col));
+            
+            dogs.push({
+                row: row,
+                col: col,
+                direction: 'down'
+            });
         }
-        while(
-            isBorder(row,col) ||
-            isForbidden(row,col) ||
-            isOccupied(row,col)
-        );
+    }
 
-        wallPositions.push(posKey(row,col));
-
-        const wall = document.createElement("img");
-        wall.src = "images/wall.png";
-        wall.classList.add("wall");
-        wall.style.left = (col*tileSize)+"px";
-        wall.style.top  = (row*tileSize)+"px";
-
-        board.appendChild(wall);
+    function spawnBomb() {
+        let row, col;
+        do {
+            row = Math.floor(Math.random() * rows);
+            col = Math.floor(Math.random() * cols);
+        } while(isBorder(row, col) || isForbidden(row, col) || isOccupied(row, col));
+        
+        bombPosition = posKey(row, col);
+        mapBomb = { row: row, col: col };
     }
 
     /* =========================
-    SPAWN PLAYER
+    GAME MECHANICS
     ========================= */
-
-    function spawnPlayer(){
-        player = document.createElement("img");
-        player.src = "images/char_down.png";
-        player.classList.add("wall");
-        updatePlayerPosition();
-        board.appendChild(player);
-    }
-
-    function updatePlayerPosition(){
-        player.style.left = (playerCol*tileSize)+"px";
-        player.style.top  = (playerRow*tileSize)+"px";
-    }
-
-    /* =========================
-    SPAWN DOG
-    ========================= */
-
-    const level = "<?php echo $level; ?>";
-    let totalDog = 1;
-
-    if(level === "Medium") totalDog = 2;
-    if(level === "Hard") totalDog = 3;
-
-    function spawnDog(){
-        let row,col;
-
-        do{
-            row = Math.floor(Math.random()*rows);
-            col = Math.floor(Math.random()*cols);
-        }
-        while(
-            isBorder(row,col) ||
-            isForbidden(row,col) ||
-            isOccupied(row,col) ||
-            isDogAt(row,col)
-        );
-
-        const dog = document.createElement("img");
-        dog.src = "images/dog_down.png";
-        dog.classList.add("wall");
-        dog.style.left = (col*tileSize)+"px";
-        dog.style.top  = (row*tileSize)+"px";
-
-        board.appendChild(dog);
-
-        dogs.push({
-            row: row,
-            col: col,
-            element: dog
-        });
-    }
-
-    function moveDogs(){
+    function moveDogs() {
         dogs.forEach(dog => {
-
             let newRow = dog.row;
             let newCol = dog.col;
 
-            // PRIORITAS GERAK VERTIKAL DULU
-            if(playerRow < dog.row){
+            // Prioritize vertical movement
+            if(playerRow < dog.row) {
                 newRow--;
-                dog.element.src = "images/dog_up.png";
-            }
-            else if(playerRow > dog.row){
+                dog.direction = 'up';
+            } else if(playerRow > dog.row) {
                 newRow++;
-                dog.element.src = "images/dog_down.png";
-            }
-            else if(playerCol < dog.col){
+                dog.direction = 'down';
+            } else if(playerCol < dog.col) {
                 newCol--;
-                dog.element.src = "images/dog_left.png";
-            }
-            else if(playerCol > dog.col){
+                dog.direction = 'left';
+            } else if(playerCol > dog.col) {
                 newCol++;
-                dog.element.src = "images/dog_right.png";
+                dog.direction = 'right';
             }
 
-            // CEK TABRAKAN
-            if(
-                isBorder(newRow,newCol) ||
-                isForbidden(newRow,newCol) ||
-                wallPositions.includes(posKey(newRow,newCol)) ||
-                isDogAt(newRow,newCol,dog)
-            ){
+            // Check collision
+            if(isBorder(newRow, newCol) || 
+               isForbidden(newRow, newCol) || 
+               wallPositions.includes(posKey(newRow, newCol)) || 
+               isDogAt(newRow, newCol, dog)) {
                 return;
             }
 
             dog.row = newRow;
             dog.col = newCol;
 
-            dog.element.style.left = (dog.col*tileSize)+"px";
-            dog.element.style.top  = (dog.row*tileSize)+"px";
-
-            // CEK KENA PLAYER
-            if(dog.row === playerRow && dog.col === playerCol){
+            // Check if dog hits player
+            if(dog.row === playerRow && dog.col === playerCol) {
                 takeDamage();
             }
-
         });
     }
 
-    /* =========================
-    SPAWN BOMB (MAP)
-    ========================= */
+    
 
-    function spawnBomb(){
-        let row,col;
-
-        do{
-            row = Math.floor(Math.random()*rows);
-            col = Math.floor(Math.random()*cols);
-        }
-        while(
-            isBorder(row,col) ||
-            isForbidden(row,col) ||
-            isOccupied(row,col)
-        );
-
-        bombPosition = posKey(row,col);
-
-        const bomb = document.createElement("img");
-        bomb.src = "images/bomb.png";
-        bomb.classList.add("wall");
-        bomb.id = "mapBomb";
-        bomb.style.left = (col*tileSize)+"px";
-        bomb.style.top  = (row*tileSize)+"px";
-
-        board.appendChild(bomb);
-    }
-
-    function explodeBomb(row, col, bombElement, radius = 1){
-
-        // hapus bomb dari map
-        bombElement.remove();
-        wallPositions.splice(wallPositions.indexOf(posKey(row,col)),1);
-
+    function explodeBomb(row, col, isTNT = false) {
+        const radius = isTNT ? 2 : 1;
+        const centerKey = posKey(row, col);
+        
+        // Remove from wall positions if it was placed there
+        const index = wallPositions.indexOf(centerKey);
+        if(index > -1) wallPositions.splice(index, 1);
+        
         const directions = [
-            {r:0, c:0},   // tengah
-            {r:-1, c:0},  // atas
-            {r:1, c:0},   // bawah
-            {r:0, c:-1},  // kiri
-            {r:0, c:1}    // kanan
+            {r:0, c:0}, {r:-1, c:0}, {r:1, c:0}, {r:0, c:-1}, {r:0, c:1}
         ];
 
         directions.forEach(dir => {
-
-            for(let i = 0; i <= radius; i++){
-
+            for(let i = 0; i <= radius; i++) {
                 const newRow = row + (dir.r * i);
                 const newCol = col + (dir.c * i);
 
-                if(
-                    isBorder(newRow,newCol) ||
-                    isForbidden(newRow,newCol)
-                ){
+                if(isBorder(newRow, newCol) || isForbidden(newRow, newCol)) {
                     break;
                 }
 
-                const key = posKey(newRow,newCol);
+                const key = posKey(newRow, newCol);
 
-                // Jika player terkena ledakan
-                if(newRow === playerRow && newCol === playerCol){
+                // Add explosion animation
+                explosions.push({
+                    row: newRow,
+                    col: newCol,
+                    timer: 10
+                });
+
+                // Check if player is hit
+                if(newRow === playerRow && newCol === playerCol) {
                     takeDamage();
                 }
 
-                const explode = document.createElement("img");
-                explode.src = "images/explode.png";
-                explode.classList.add("wall");
-                explode.style.left = (newCol * tileSize) + "px";
-                explode.style.top  = (newRow * tileSize) + "px";
-
-                board.appendChild(explode);
-
-                // =========================
-                // JIKA KENA WALL
-                // =========================
-                if(wallPositions.includes(key)){
-
-                    wallPositions.splice(wallPositions.indexOf(key),1);
-
+                // Check if wall is hit
+                const wallIndex = wallPositions.indexOf(key);
+                if(wallIndex > -1) {
+                    wallPositions.splice(wallIndex, 1);
                     destroyedWalls++;
-                    updateSidebar();
-
-                    const walls = document.querySelectorAll(".wall");
-                    walls.forEach(w => {
-                        if(
-                            w.style.left === (newCol * tileSize) + "px" &&
-                            w.style.top === (newRow * tileSize) + "px"
-                        ){
-                            w.remove();
-                        }
-                    });
-
-                    // =========================
-                    // RANDOM DROP SYSTEM (TETAP ADA)
-                    // =========================
+                    
+                    // Random drop
                     const random = Math.floor(Math.random() * 100);
-                    let dropType = null;
-
-                    if(random < 30){
-                        dropType = "tnt";
+                    if(random < 30) {
+                        items.push({
+                            row: newRow,
+                            col: newCol,
+                            type: 'tnt'
+                        });
+                    } else if(random < 90) {
+                        items.push({
+                            row: newRow,
+                            col: newCol,
+                            type: 'ice'
+                        });
                     }
-                    else if(random < 90){
-                        dropType = "ice";
-                    }
-
-                    if(dropType){
-
-                        const item = document.createElement("img");
-
-                        if(dropType === "tnt"){
-                            item.src = "images/tnt.png";
-                        }else{
-                            item.src = "images/ice.png";
-                        }
-
-                        item.classList.add("wall");
-                        item.style.left = (newCol * tileSize) + "px";
-                        item.style.top  = (newRow * tileSize) + "px";
-
-                        board.appendChild(item);
-
-                        itemPositions[key] = dropType;
-                    }
+                    
+                    updateSidebar();
                 }
-
-                // hapus animasi ledakan
-                setTimeout(()=>{
-                    explode.remove();
-                },500);
             }
-
         });
+        
+        // Clear map bomb if it was the one exploding
+        if(mapBomb && mapBomb.row === row && mapBomb.col === col) {
+            mapBomb = null;
+            bombPosition = null;
+        }
     }
 
-    function updateSidebar(){
+    
+
+    function updateSidebar() {
         document.getElementById("destroyedCount").innerText = "= " + destroyedWalls;
         document.getElementById("tntCount").innerText = "= " + playerTNT;
         document.getElementById("iceCount").innerText = "= " + iceCollected;
     }
 
     /* =========================
-    INIT GAME
+    DRAWING FUNCTIONS
     ========================= */
+    function draw() {
+        if(isPaused || gameOver) return;
+        
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw background
+        ctx.drawImage(images.background, 0, 0, canvas.width, canvas.height);
+        
+        // Draw walls
+        wallPositions.forEach(pos => {
+            const [row, col] = pos.split('-').map(Number);
+            ctx.drawImage(images.wall, col * tileSize, row * tileSize, tileSize, tileSize);
+        });
+        
+        // Draw items
+        items.forEach(item => {
+            const img = item.type === 'tnt' ? images.tnt : images.ice;
+            ctx.drawImage(img, item.col * tileSize, item.row * tileSize, tileSize, tileSize);
+        });
+        
+        // Draw map bomb
+        if(mapBomb) {
+            ctx.drawImage(images.bomb, mapBomb.col * tileSize, mapBomb.row * tileSize, tileSize, tileSize);
+        }
+        
+        // Draw player bomb
+        if(activeBomb){
+            const img = activeBomb.type === "tnt" ? images.tnt : images.bomb;
 
-    spawnPlayer();
+            ctx.drawImage(
+                img,
+                activeBomb.col * tileSize,
+                activeBomb.row * tileSize,
+                tileSize,
+                tileSize
+            );
+        }
 
-    for(let i=0;i<totalWall;i++){
-        spawnWall();
+        // Draw dogs
+        dogs.forEach(dog => {
+            let img;
+            switch(dog.direction) {
+                case 'up': img = images.dog_up; break;
+                case 'down': img = images.dog_down; break;
+                case 'left': img = images.dog_left; break;
+                case 'right': img = images.dog_right; break;
+                default: img = images.dog_down;
+            }
+            ctx.drawImage(img, dog.col * tileSize, dog.row * tileSize, tileSize, tileSize);
+        });
+        
+        // Draw player with frozen effect
+        if(isFrozen) {
+            ctx.globalAlpha = 0.5;
+        }
+        let playerImg;
+        switch(playerDirection) {
+            case 'up': playerImg = images.char_up; break;
+            case 'down': playerImg = images.char_down; break;
+            case 'left': playerImg = images.char_left; break;
+            case 'right': playerImg = images.char_right; break;
+            default: playerImg = images.char_down;
+        }
+        ctx.drawImage(playerImg, playerCol * tileSize, playerRow * tileSize, tileSize, tileSize);
+        ctx.globalAlpha = 1.0;
+        
+        // Draw explosions
+        explosions = explosions.filter(exp => {
+            ctx.drawImage(images.explode, exp.col * tileSize, exp.row * tileSize, tileSize, tileSize);
+            exp.timer--;
+            return exp.timer > 0;
+        });
+        
+        gameLoop = requestAnimationFrame(draw);
     }
-
-    for(let i=0;i<totalDog;i++){
-        spawnDog();
-    }
-
-    spawnBomb();
-    updateSidebar();
-    startTimer();
-    dogInterval = setInterval(moveDogs, 600);
 
     /* =========================
-    MOVEMENT
+    INITIALIZATION
     ========================= */
+    function init() {
+        // Spawn initial objects
+        for(let i = 0; i < totalWall; i++) {
+            spawnWall();
+        }
+        
+        spawnDog();
+        spawnBomb();
+        
+        updateSidebar();
+        startTimer();
+        dogInterval = setInterval(moveDogs, 600);
+        gameLoop = requestAnimationFrame(draw);
+    }
 
-    document.addEventListener("keydown",function(e){
-        if(e.key === "Escape"){
+    // Wait for images to load before starting
+    let loadedImages = 0;
+    const totalImages = Object.keys(images).length;
+    
+    for(let key in images) {
+        images[key].onload = () => {
+            loadedImages++;
+            if(loadedImages === totalImages) {
+                init();
+            }
+        };
+    }
+
+    /* =========================
+    MOVEMENT CONTROLS
+    ========================= */
+    document.addEventListener("keydown", function(e) {
+        if(e.key === "Escape") {
             togglePause();
             return;
         }
 
-        if(isPaused) return;
-        
-        if(isFrozen) return;
+        if(isPaused || gameOver || isFrozen) return;
 
         let newRow = playerRow;
         let newCol = playerCol;
 
-        if(e.key==="w"||e.key==="W"){
+        if(e.key === "w" || e.key === "W") {
             newRow--;
-            player.src="images/char_up.png";
-        }
-        else if(e.key==="s"||e.key==="S"){
+            playerDirection = 'up';
+        } else if(e.key === "s" || e.key === "S") {
             newRow++;
-            player.src="images/char_down.png";
-        }
-        else if(e.key==="a"||e.key==="A"){
+            playerDirection = 'down';
+        } else if(e.key === "a" || e.key === "A") {
             newCol--;
-            player.src="images/char_left.png";
-        }
-        else if(e.key==="d"||e.key==="D"){
+            playerDirection = 'left';
+        } else if(e.key === "d" || e.key === "D") {
             newCol++;
-            player.src="images/char_right.png";
+            playerDirection = 'right';
         }
 
-        // DROP BOMB
-        if(e.code === "Space"){
-
+        // Place bomb
+        if(e.code === "Space") {
             if(isFrozen) return;
-
             if(playerBombCount <= 0 && playerTNT <= 0) return;
 
             const bombRow = playerRow;
             const bombCol = playerCol;
             const key = posKey(bombRow, bombCol);
 
-            if(
-                wallPositions.includes(key) ||
-                bombPosition === key
-            ){
+            if(wallPositions.includes(key) || (mapBomb && posKey(mapBomb.row, mapBomb.col) === key)) {
                 return;
             }
 
-            let radius = 1;
-            let type = "bomb";
-
-            const bomb = document.createElement("img");
-
-            // PRIORITAS TNT
-            if(playerTNT > 0){
-
+            if(playerTNT > 0) {
                 playerTNT--;
-                radius = 2;
-                type = "tnt";
+                activeBomb = {
+                    row: bombRow,
+                    col: bombCol,
+                    type: "tnt"
+                };
 
-                bomb.src = "images/tnt.png";
-            }
-            else{
+                setTimeout(() => {
+                    explodeBomb(bombRow, bombCol, true);
+                    activeBomb = null;
+                }, 5000);
+
+            } else {
                 playerBombCount--;
-                bomb.src = "images/bomb.png";
+
+                activeBomb = {
+                    row: bombRow,
+                    col: bombCol,
+                    type: "bomb"
+                };
+
+                setTimeout(() => {
+                    explodeBomb(bombRow, bombCol, false);
+                    activeBomb = null;
+                }, 5000);
             }
-
-            bomb.classList.add("wall");
-            bomb.style.left = (bombCol * tileSize) + "px";
-            bomb.style.top  = (bombRow * tileSize) + "px";
-
-            board.appendChild(bomb);
-            wallPositions.push(key);
-
-            setTimeout(()=>{
-                explodeBomb(bombRow, bombCol, bomb, radius);
-            },5000);
-
+                        
+            updateSidebar();
             return;
         }
 
-        // Stop jika wall
-        if(
-            isBorder(newRow,newCol) ||
-            isForbidden(newRow,newCol) ||
-            wallPositions.includes(posKey(newRow,newCol))
-        ){
+        // Check movement collision
+        if(isBorder(newRow, newCol) || 
+           isForbidden(newRow, newCol) || 
+           wallPositions.includes(posKey(newRow, newCol))) {
             return;
         }
 
         lastPosition = posKey(playerRow, playerCol);
-        playerRow=newRow;
-        playerCol=newCol;
-        updatePlayerPosition();
-        /* =========================
-        CEK AMBIL BOMB
-        ========================= */
-        if(bombPosition === posKey(playerRow, playerCol)){
+        playerRow = newRow;
+        playerCol = newCol;
 
+        // Check bomb collection
+        if(mapBomb && playerRow === mapBomb.row && playerCol === mapBomb.col) {
             playerBombCount++;
-
-            const mapBomb = document.getElementById("mapBomb");
-            if(mapBomb) mapBomb.remove();
-
+            mapBomb = null;
             bombPosition = null;
         }
 
-        const currentKey = posKey(playerRow, playerCol);
-
-        if(itemPositions[currentKey] && currentKey !== lastPosition){
-            const type = itemPositions[currentKey];
-
-            if(type === "tnt"){
+        // Check item collection
+        const itemIndex = items.findIndex(item => item.row === playerRow && item.col === playerCol);
+        if(itemIndex > -1) {
+            const item = items[itemIndex];
+            if(item.type === 'tnt') {
                 playerTNT++;
-                updateSidebar();
-            } else if(type === "ice"){
+            } else if(item.type === 'ice') {
                 iceCollected++;
-                updateSidebar();
-
-                if(isFrozen) return;
-
-                isFrozen = true;
-
-                player.style.opacity = "0.5";
-
-                setTimeout(()=>{
-                    isFrozen = false;
-                    player.style.opacity = "1";
-                },5000);
-            }
-
-            // hapus dari map
-            delete itemPositions[currentKey];
-
-            const items = document.querySelectorAll(".wall");
-            items.forEach(i=>{
-                if(
-                    i.style.left === (playerCol * tileSize) + "px" &&
-                    i.style.top === (playerRow * tileSize) + "px"
-                ){
-                    if(i.src.includes("tnt") || i.src.includes("ice")){
-                        i.remove();
-                    }
+                
+                if(!isFrozen) {
+                    isFrozen = true;
+                    setTimeout(() => {
+                        isFrozen = false;
+                    }, 5000);
                 }
-            });
+            }
+            items.splice(itemIndex, 1);
+            updateSidebar();
         }
     });
 

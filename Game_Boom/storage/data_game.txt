@@ -1,3 +1,7 @@
 Username: Herman Goering | Time: 00:22 | Wall: 1 | TNT: 0 | Ice: 1
 Username: Test4 | Time: 00:13 | Wall: 0 | TNT: 0 | Ice: 0
 Username: Bambang 2 | Time: 00:26 | Wall: 2 | TNT: 0 | Ice: 2
+Username: Rusdi | Time: 00:30 | Wall: 1 | TNT: 0 | Ice: 1
+Username: Raiman | Time: 00:24 | Wall: 1 | TNT: 0 | Ice: 1
+Username: Rizky | Time: 00:24 | Wall: 3 | TNT: 0 | Ice: 1
+Username: hey | Time: 00:50 | Wall: 4 | TNT: 0 | Ice: 3
