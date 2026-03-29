@@ -5,3 +5,5 @@ Username: Rusdi | Time: 00:30 | Wall: 1 | TNT: 0 | Ice: 1
 Username: Raiman | Time: 00:24 | Wall: 1 | TNT: 0 | Ice: 1
 Username: Rizky | Time: 00:24 | Wall: 3 | TNT: 0 | Ice: 1
 Username: hey | Time: 00:50 | Wall: 4 | TNT: 0 | Ice: 3
+Username: Rijal | Time: 00:46 | Wall: 6 | TNT: 0 | Ice: 1
+Username: Kopak | Time: 00:25 | Wall: 1 | TNT: 0 | Ice: 1

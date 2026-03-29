@@ -26,13 +26,10 @@
 <style>
     body {
         margin: 0;
-        font-family: Arial, sans-serif;
-        background: #ffffff;
-        overflow: hidden;
-    }
-
-    .wrapper {
-        min-height: 100vh;
+        font-family: Arial, Helvetica, sans-serif;
+        background: #fff;
+        overflow:hidden;
+        height: 100vh;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -192,7 +189,6 @@
     const tileSize = 73;
     const rows = 9;
     const cols = 11;
-    const totalWall = 10;
 
     const forbidden = [
         "2-2","4-2","6-2",
@@ -200,38 +196,9 @@
         "2-6","4-6","6-6",
         "2-8","4-8","6-8"
     ];
-
-    // Game objects
-    let wallPositions = [];
-    let dogs = [];
-    let bombPosition = null;
-    let mapBomb = null;
-    let explosions = [];
-    let items = [];
-
-    let playerBombCount = 0;
+    
     let playerRow = 1;
     let playerCol = 1;
-    let playerDirection = 'down';
-
-    let playerTNT = 0;
-    let playerIce = 0;
-
-    let isFrozen = false;
-    let lastPosition = posKey(playerRow, playerCol);
-    let destroyedWalls = 0;
-    let iceCollected = 0;
-
-    let playerLives = 3;
-    let gameOver = false;
-
-    let seconds = 0;
-    let timerInterval;
-    let isPaused = false;
-    let gameLoop;
-    let dogInterval;
-
-    let activeBomb = null; 
 
     // Images
     const images = {
@@ -282,6 +249,9 @@
         return forbidden.includes(posKey(row, col));
     }
 
+    let wallPositions = [];
+    let dogs = [];
+    
     function isOccupied(row, col) {
         const key = posKey(row, col);
         const dogHere = dogs.some(d => posKey(d.row, d.col) === key);
@@ -295,6 +265,8 @@
     /* =========================
     TIMER
     ========================= */
+    let seconds = 0;
+    let timerInterval;
     function startTimer() {
         timerInterval = setInterval(() => {
             if(gameOver) return;
@@ -305,24 +277,6 @@
                 (mins < 10 ? "0" + mins : mins) + ":" + 
                 (secs < 10 ? "0" + secs : secs);
         }, 1000);
-    }
-
-    function togglePause() {
-        if(gameOver) return;
-        isPaused = !isPaused;
-        const overlay = document.getElementById("pauseOverlay");
-        
-        if(isPaused) {
-            overlay.style.display = "flex";
-            clearInterval(timerInterval);
-            clearInterval(dogInterval);
-            cancelAnimationFrame(gameLoop);
-        } else {
-            overlay.style.display = "none";
-            startTimer();
-            dogInterval = setInterval(moveDogs, 600);
-            gameLoop = requestAnimationFrame(draw);
-        }
     }
 
     /* =========================
@@ -354,6 +308,8 @@
         form.submit();
     }
 
+    let playerLives = 3;
+    let gameOver = false;
     function takeDamage() {
         if(gameOver) return;
         playerLives--;
@@ -404,6 +360,8 @@
         }
     }
 
+    let bombPosition = null;
+    let mapBomb = null;
     function spawnBomb() {
         let row, col;
         do {
@@ -455,9 +413,11 @@
             }
         });
     }
-
     
 
+    let explosions = [];
+    let items = [];
+    let destroyedWalls = 0;
     function explodeBomb(row, col, isTNT = false) {
         const radius = isTNT ? 2 : 1;
         const centerKey = posKey(row, col);
@@ -527,17 +487,14 @@
         }
     }
 
+
     
-
-    function updateSidebar() {
-        document.getElementById("destroyedCount").innerText = "= " + destroyedWalls;
-        document.getElementById("tntCount").innerText = "= " + playerTNT;
-        document.getElementById("iceCount").innerText = "= " + iceCollected;
-    }
-
     /* =========================
     DRAWING FUNCTIONS
     ========================= */
+
+    
+    
     function draw() {
         if(isPaused || gameOver) return;
         
@@ -615,9 +572,33 @@
         gameLoop = requestAnimationFrame(draw);
     }
 
+    let isPaused = false;
+    let gameLoop;
+    function togglePause() {
+        if(gameOver) return;
+        isPaused = !isPaused;
+        const overlay = document.getElementById("pauseOverlay");
+        
+        if(isPaused) {
+            overlay.style.display = "flex";
+            clearInterval(timerInterval);
+            clearInterval(dogInterval);
+            cancelAnimationFrame(gameLoop);
+        } else {
+            overlay.style.display = "none";
+            startTimer();
+            dogInterval = setInterval(moveDogs, 600);
+            gameLoop = requestAnimationFrame(draw);
+        }
+    }
+
+
     /* =========================
     INITIALIZATION
     ========================= */
+
+    const totalWall = 10;
+    let dogInterval;
     function init() {
         // Spawn initial objects
         for(let i = 0; i < totalWall; i++) {
@@ -646,9 +627,25 @@
         };
     }
 
+    function updateSidebar() {
+        document.getElementById("destroyedCount").innerText = "= " + destroyedWalls;
+        document.getElementById("tntCount").innerText = "= " + playerTNT;
+        document.getElementById("iceCount").innerText = "= " + iceCollected;
+    }
+
+
     /* =========================
     MOVEMENT CONTROLS
     ========================= */
+
+    let playerBombCount = 0;
+    let activeBomb = null;
+    let isFrozen = false;
+    let playerTNT = 0;
+    let iceCollected = 0;
+    
+    let lastPosition = posKey(playerRow, playerCol);
+    let playerDirection = 'down';
     document.addEventListener("keydown", function(e) {
         if(e.key === "Escape") {
             togglePause();

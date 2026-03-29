@@ -42,26 +42,10 @@ if(isset($_POST['start'])){
         text-align:center;
     }
 
-    .icons img{
-        width:65px;
-        height:65px;
-        object-fit: contain;
+    .logo-img{
+        width:280px;
+        margin-bottom:20px;
     }
-
-    .logo{
-        font-size:60px;
-        font-weight:900;
-        letter-spacing:3px;
-        margin: 0;
-        display:flex;
-        justify-content:center;
-        align-items:center;
-    }
-
-    .logo-o{
-        height:55px;
-    }
-
 
     .input-select{
         display:block;
@@ -139,34 +123,13 @@ if(isset($_POST['start'])){
         border-radius:50%;
         cursor:pointer;
     }
-
-    .countdown{
-        display:none;
-        position:fixed;
-        top:50%;
-        left:50%;
-        transform:translate(-50%,-50%);
-        font-size:100px;
-        font-weight:bold;
-    }
-
 </style>
 </head>
 <body>
 
 <div class="main">
 
-    <div class="icons">
-        <img src="Images/char_down.png">
-        <img src="Images/wall.png">
-        <img src="Images/dog_down.png">
-    </div>
-
-    <h1 class="logo">
-        B
-        <img src="Images/bomb.png" class="logo-o">
-        MSKUY
-    </h1>
+    <img src="Images/logo.png" class="logo-img">
 
     <form method="POST" id="gameForm">
 
@@ -202,7 +165,6 @@ if(isset($_POST['start'])){
     </ol>
 </div>
 
-<div class="countdown" id="countdown">3</div>
 
 <script>
     const username = document.getElementById("username");
